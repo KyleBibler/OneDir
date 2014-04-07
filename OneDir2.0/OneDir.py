@@ -1,15 +1,19 @@
 from flask import *
+from flask_bootstrap import Bootstrap
 from forms import RegistrationForm
 from flask_sqlalchemy import SQLAlchemy
 from database import init_db, User, db
 from sqlalchemy.exc import IntegrityError
 import os
+import os.path
+from os.path import expanduser
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from flask_admin import Admin
 
 app = Flask(__name__)
 app.config.from_object('config')
+Bootstrap(app)
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 SECRET_KEY = 'flask-session-insecure-secret-key'
@@ -19,6 +23,11 @@ CSRF_ENABLED = True
 WTF_CSRF_SECRET_KEY = 'this-is-not-random-but-it-should-be'
 
 app.config.from_object('database')
+engine = create_engine(SQLALCHEMY_DATABASE_URI)
+db.Session = sessionmaker(bind=engine)
+
+home = expanduser("~")
+home += "\OneDir"
 
 app = init_db(app)
 @app.before_first_request
@@ -56,6 +65,8 @@ def login():
         if request.form['username'] == 'Admin':
             return redirect(url_for('login'))
         else:
+            if not os.path.exists(home):
+                os.mkdir(home)
             return redirect(url_for('show_entries'))
     return render_template('login.html', error=error)
 
@@ -67,12 +78,14 @@ def register():
         if request.form['password'] != request.form['confirm']:
             error = 'Passwords do not match'
         else:
+            u = User(request.form['username'], request.form['password'])
             try:
-                u = User(request.form['username'], request.form['password'])
-                db.session.add(u)
-                db.session.commit()
-            finally:
+                db_session = db.Session()
+                db_session.add(u)
+                db_session.commit()
                 return redirect(url_for('login'))
+            except Exception as e:
+                error = str(e.message)
     return render_template('register.html', error=error)
 
 
