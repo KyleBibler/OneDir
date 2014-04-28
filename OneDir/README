@@ -1,0 +1,21 @@
+FOR SERVER:
+===========
+
+1) Go to Project Directory
+2) Create "storage" directory
+3) sqlite3 database.db < create_database.sql
+2) virtualenv venv
+3) source venv/bin/activate
+4) pip install Flask
+5) python server.py
+
+
+FOR CLIENT:
+===========
+
+1) Go to Project Directory
+2) virtualenv venv
+3) source venv/bin/activate
+4) pip install Watchdog
+5) pip install requests
+6) python client.py
